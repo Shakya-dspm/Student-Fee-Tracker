@@ -18,6 +18,12 @@ The reusable browser storage API is in `assets/js/storage.js` and is exposed as 
 
 Student contact numbers accept Sri Lankan mobile formats: `07XXXXXXXX` or `+947XXXXXXXX` (spaces, hyphens, and parentheses are normalized).
 
+## Student management
+
+The student directory and profile pages are in `pages/students.html` and `pages/student-details.html`. They use the existing `window.FeeTrackStorage` methods for student records, batches, payments, and soft deletion. Student records also accept optional email and address fields plus a registration date; records created before these fields were added continue to use `createdAt` as the registration-date fallback.
+
+Students must be assigned to an existing batch. The student pages do not seed sample data or create payment transactions.
+
 Optional demonstration records are defined separately in `assets/js/sample-data.js`. Load that script after `storage.js` and call `window.FeeTrackSampleData.initializeSampleData()` explicitly to seed empty collections. Loading either file alone does not insert data. Repeated payment submissions with identical details are treated as retries when no payment ID is supplied; pass a distinct ID for an intentionally identical transaction.
 
 Run the storage tests with:

@@ -12,10 +12,11 @@
     const KEY_LIST = Object.values(KEYS);
     const STUDENT_INPUT_FIELDS = new Set([
         "id", "studentName", "contactNo", "totalFees", "emi1", "emi2", "emi3",
-        "totalReceived", "status", "batchId", "isSoftDelete"
+        "totalReceived", "status", "batchId", "isSoftDelete", "email", "address", "registrationDate"
     ]);
     const STUDENT_UPDATE_FIELDS = new Set([
-        "studentName", "contactNo", "totalFees", "emi1", "emi2", "emi3", "batchId"
+        "studentName", "contactNo", "totalFees", "emi1", "emi2", "emi3", "batchId",
+        "email", "address", "registrationDate"
     ]);
     const BATCH_INPUT_FIELDS = new Set([
         "id", "batchName", "courseName", "description", "startDate", "endDate"
@@ -127,6 +128,14 @@
         return compact;
     }
 
+    function normalizeEmail(value) {
+        const email = optionalText(value, "email", 254);
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            throw new TypeError("email must be a valid email address.");
+        }
+        return email;
+    }
+
     function toMinorUnits(value, label, allowZero) {
         let amount;
         if (typeof value === "number") {
@@ -167,7 +176,21 @@
     }
 
     function today() {
-        return new Date().toISOString().slice(0, 10);
+        const date = new Date();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${date.getFullYear()}-${month}-${day}`;
+    }
+
+    function registrationDateFor(student) {
+        if (student.registrationDate !== undefined) {
+            return normalizeDate(student.registrationDate, "registrationDate");
+        }
+        const createdAt = Date.parse(student.createdAt);
+        if (!Number.isFinite(createdAt)) {
+            throw new TypeError("createdAt must be a valid date when registrationDate is not set.");
+        }
+        return new Date(createdAt).toISOString().slice(0, 10);
     }
 
     function generateId(prefix, existingIds) {
@@ -308,6 +331,9 @@
             try {
                 requiredText(student.studentName, "studentName", 120);
                 normalizePhone(student.contactNo);
+                normalizeEmail(student.email);
+                optionalText(student.address, "address", 1000);
+                registrationDateFor(student);
                 toMinorUnits(student.totalFees, "totalFees", false);
                 ["emi1", "emi2", "emi3"].forEach((field) => {
                     toMinorUnits(student[field], field, true);
@@ -394,6 +420,9 @@
         const received = totalReceivedCents(student.id, payments);
         return {
             ...student,
+            email: normalizeEmail(student.email),
+            address: optionalText(student.address, "address", 1000),
+            registrationDate: registrationDateFor(student),
             totalReceived: fromMinorUnits(received),
             status: statusFromCents(received, fees)
         };
@@ -422,6 +451,11 @@
         const id = resolveNewId(student.id, "stu", ids);
         const studentName = requiredText(student.studentName, "studentName", 120);
         const contactNo = normalizePhone(student.contactNo);
+        const email = normalizeEmail(student.email);
+        const address = optionalText(student.address, "address", 1000);
+        const registrationDate = student.registrationDate === undefined
+            ? today()
+            : normalizeDate(student.registrationDate, "registrationDate");
         const totalFeesCents = toMinorUnits(student.totalFees, "totalFees", false);
         const batchId = normalizeId(student.batchId, "batchId");
         assertBatchReference(batchId, batches);
@@ -444,6 +478,9 @@
             id,
             studentName,
             contactNo,
+            email,
+            address,
+            registrationDate,
             totalFees: fromMinorUnits(totalFeesCents),
             emi1: installments[0],
             emi2: installments[1],
@@ -487,6 +524,9 @@
             ...current,
             studentName: requiredText(nextValues.studentName, "studentName", 120),
             contactNo: normalizePhone(nextValues.contactNo),
+            email: normalizeEmail(nextValues.email),
+            address: optionalText(nextValues.address, "address", 1000),
+            registrationDate: registrationDateFor(nextValues),
             totalFees: fromMinorUnits(totalFeesCents),
             emi1: fromMinorUnits(toMinorUnits(nextValues.emi1, "emi1", true)),
             emi2: fromMinorUnits(toMinorUnits(nextValues.emi2, "emi2", true)),
