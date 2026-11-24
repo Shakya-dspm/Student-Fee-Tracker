@@ -236,6 +236,16 @@
     background: #f1f5f9;
 }
 
+.status-active {
+    color: #15803d;
+    background: #f0fdf4;
+}
+
+.status-completed {
+    color: #475569;
+    background: #f1f5f9;
+}
+
 .student-avatar {
     display: grid;
     width: 32px;
