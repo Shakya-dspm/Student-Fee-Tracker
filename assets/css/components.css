@@ -345,6 +345,7 @@
     background: #fff;
     font-size: 10px;
     font-weight: 600;
+    text-decoration: none;
     transition: border-color .18s ease, background-color .18s ease, color .18s ease;
 }
 
@@ -463,6 +464,30 @@
     border-color: #bbf7d0;
     color: #166534;
     background: #f0fdf4;
+}
+
+.dashboard-setup {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+}
+
+.dashboard-setup[hidden] {
+    display: none;
+}
+
+.dashboard-setup strong {
+    color: #1e3a8a;
+}
+
+.dashboard-setup > span {
+    flex: 1 1 300px;
+}
+
+.dashboard-setup .text-link {
+    color: #1d4ed8;
+    text-decoration: underline;
 }
 
 .student-summary-grid {

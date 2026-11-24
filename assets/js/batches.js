@@ -135,6 +135,10 @@
         const form = document.querySelector("[data-batch-form]");
         const saveButton = document.querySelector("[data-save-batch]");
         const formMessage = document.querySelector("[data-form-message]");
+        const requestedSearch = new URLSearchParams(window.location.search).get("q");
+        if (requestedSearch) {
+            page.querySelector("[data-batch-search]").value = requestedSearch;
+        }
 
         function loadData() {
             state.batches = storage.getBatches();
@@ -220,7 +224,9 @@
 
             if (visible.length === 0) {
                 const row = document.createElement("tr");
-                const cell = createElement("td", "student-table-empty", "No batches match these filters.");
+                const cell = createElement("td", "student-table-empty", state.batches.length === 0
+                    ? "No batches yet. Create your first batch to start registering students."
+                    : "No batches match these filters.");
                 cell.colSpan = 8;
                 row.append(cell);
                 fragment.append(row);

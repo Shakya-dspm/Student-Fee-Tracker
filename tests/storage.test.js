@@ -169,9 +169,21 @@ test("payments use cents, enforce balances, update status, and remain queryable"
     assert.equal(duplicate.id, first.id);
     assert.equal(storage.getPaymentsByStudentId(student.id).length, 1);
 
+    const intentionalRepeat = storage.addPayment({
+        id: "payment-repeat-2",
+        studentId: student.id,
+        amount: 0.1,
+        paymentDate: "2026-04-01",
+        paymentMethod: "Cash",
+        note: "First part"
+    });
+    assert.equal(intentionalRepeat.id, "payment-repeat-2");
+    assert.equal(storage.getPaymentsByStudentId(student.id).length, 2);
+    assert.equal(storage.getStudentById(student.id).totalReceived, 0.2);
+
     const second = storage.addPayment({
         studentId: student.id,
-        amount: 0.2,
+        amount: 0.1,
         paymentDate: "2026-04-02",
         paymentMethod: "Card"
     });
@@ -184,7 +196,7 @@ test("payments use cents, enforce balances, update status, and remain queryable"
     assert.equal(storage.calculatePaymentStatus(20, 100), "Partial");
     assert.equal(storage.calculatePaymentStatus(100, 100), "Paid");
     assert.equal(storage.getPaymentById(second.id).paymentMethod, "Card");
-    assert.equal(storage.getPayments().length, 2);
+    assert.equal(storage.getPayments().length, 3);
     assert.throws(() => storage.updateStudent(student.id, { totalFees: 0.2 }), /less than the student's recorded payments/);
 
     assert.throws(() => storage.addPayment({
@@ -218,7 +230,7 @@ test("payments use cents, enforce balances, update status, and remain queryable"
         paymentMethod: "Cheque"
     }), /paymentMethod must be/);
     storage.softDeleteStudent(student.id);
-    assert.equal(storage.getPaymentsByStudentId(student.id).length, 2);
+    assert.equal(storage.getPaymentsByStudentId(student.id).length, 3);
 });
 
 test("sample data seeds empty collections once and preserves existing records", () => {

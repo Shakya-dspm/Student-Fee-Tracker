@@ -148,6 +148,10 @@
         const saveButton = document.querySelector("[data-save-student]");
         const formMessage = document.querySelector("[data-form-message]");
         const showDeleted = page.querySelector("[data-show-deleted]");
+        const requestedSearch = new URLSearchParams(window.location.search).get("q");
+        if (requestedSearch) {
+            page.querySelector("[data-student-search]").value = requestedSearch;
+        }
 
         function loadData() {
             state.students = storage.getStudents();
@@ -273,9 +277,11 @@
                 const cell = createElement(
                     "td",
                     "student-table-empty",
-                    state.showDeleted
-                        ? "No deleted students match these filters."
-                        : "No students match these filters."
+                    state.students.length === 0 && !state.showDeleted
+                        ? "No students yet. Create a batch, then register your first student."
+                        : state.showDeleted
+                            ? "No deleted students match these filters."
+                            : "No students match these filters."
                 );
                 cell.colSpan = 9;
                 row.append(cell);
