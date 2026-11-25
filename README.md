@@ -1,27 +1,36 @@
 # Student Fee Tracker
 
-A front-end Student Fee Tracking System built with HTML5, CSS3, vanilla JavaScript, Bootstrap 5, Bootstrap Icons, Chart.js, and LocalStorage.
+Student Fee Tracker helps you organize student enrollment and keep track of course fees and payments in one place.
 
-## Project Structure
+## What you can do
 
-- `index.html` - main entry page
-- `pages/` - application HTML pages
-- `assets/css/` - stylesheets
-- `assets/js/` - JavaScript modules
-- `assets/images/` - project images
+- **See the overall picture:** The dashboard summarizes enrolled students, expected fees, payments received, and outstanding balances. Charts and recent activity reflect your saved records.
+- **Manage batches:** Create and update batches, review their students, and find batches with search and filters. A batch cannot be removed while students are assigned to it.
+- **Keep student records:** Register students in a batch, update their details, and find them by name, ID, batch, or payment status. Student profiles show fee balances and payment history. Deleted students can be restored, and their payment history is retained.
+- **Track fee balances:** The Fee Management page shows each active student's course fee, amount paid, remaining balance, and payment status.
+- **Record payments:** Accept partial or full payments using the available payment methods. The tracker checks the amount against the student's remaining balance and updates their balance and payment history after a successful receipt.
+- **Review and export reports:** Compare payment statuses and batch totals, review monthly collections, and download a CSV report.
+- **Search and move between records:** Use the dashboard search and page filters to find students, batches, and payments, then open related profiles and histories.
 
-No backend or API integration is included.
+## Getting started
 
-## LocalStorage foundation
+1. Open the Dashboard. On a new workspace, follow its setup prompt to create a batch.
+2. Register students and assign each one to an existing batch.
+3. Open **Fee Management** to review balances, or choose **Payment History** to record a payment.
+4. Visit **Reports** to review collections or export a CSV summary.
 
-The reusable browser storage API is in `assets/js/storage.js` and is exposed as `window.FeeTrackStorage`. Load it before scripts that use student, batch, or payment records. It stores those collections and settings under separate `feetTrack_*` keys. `clearAllData()` removes only these FeeTrack keys; corrupted JSON is reported and left untouched.
+Optional sample records are available from the empty-workspace setup prompt. They are only added when you choose that option; existing records are not silently replaced.
 
-Student contact numbers accept Sri Lankan mobile formats: `07XXXXXXXX` or `+947XXXXXXXX` (spaces, hyphens, and parentheses are normalized).
+## Open the app
 
-Optional demonstration records are defined separately in `assets/js/sample-data.js`. Load that script after `storage.js` and call `window.FeeTrackSampleData.initializeSampleData()` explicitly to seed empty collections. Loading either file alone does not insert data. Repeated payment submissions with identical details are treated as retries when no payment ID is supplied; pass a distinct ID for an intentionally identical transaction.
-
-Run the storage tests with:
+Run the project from a local web server, then open its address in your browser. For example, from the project folder you can run:
 
 ```sh
-node --test tests/storage.test.js
+python -m http.server 8000
 ```
+
+Then visit `http://localhost:8000/`.
+
+## Your records
+
+The tracker saves records in the browser where you use it. They remain available when you return to the app in that browser, but are not automatically shared with another browser or device.

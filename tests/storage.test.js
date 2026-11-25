@@ -111,6 +111,37 @@ test("student and batch records validate, update, soft-delete, and restore", () 
     assert.equal(storage.getBatches().length, 1);
 });
 
+test("student profile metadata persists and supports records created before the fields existed", () => {
+    const { storage, localStorage } = createHarness();
+    const batch = addTestBatch(storage);
+    const student = addTestStudent(storage, batch.id, {
+        email: "student@example.com",
+        address: "12 Lake Road, Colombo",
+        registrationDate: "2026-02-14"
+    });
+
+    assert.equal(student.email, "student@example.com");
+    assert.equal(student.address, "12 Lake Road, Colombo");
+    assert.equal(storage.getStudentById(student.id).registrationDate, "2026-02-14");
+    assert.throws(() => addTestStudent(storage, batch.id, { email: "not-an-email" }), /valid email/);
+
+    const updated = storage.updateStudent(student.id, { address: "New address" });
+    assert.equal(updated.email, "student@example.com");
+    assert.equal(updated.address, "New address");
+    assert.equal(updated.registrationDate, "2026-02-14");
+
+    const legacyRecord = { ...updated };
+    delete legacyRecord.email;
+    delete legacyRecord.address;
+    delete legacyRecord.registrationDate;
+    localStorage.setItem(storage.KEYS.students, JSON.stringify([legacyRecord]));
+
+    const legacyStudent = storage.getStudentById(student.id);
+    assert.equal(legacyStudent.email, "");
+    assert.equal(legacyStudent.address, "");
+    assert.equal(legacyStudent.registrationDate, legacyStudent.createdAt.slice(0, 10));
+});
+
 test("payments use cents, enforce balances, update status, and remain queryable", () => {
     const { storage } = createHarness();
     const batch = addTestBatch(storage);
@@ -138,9 +169,21 @@ test("payments use cents, enforce balances, update status, and remain queryable"
     assert.equal(duplicate.id, first.id);
     assert.equal(storage.getPaymentsByStudentId(student.id).length, 1);
 
+    const intentionalRepeat = storage.addPayment({
+        id: "payment-repeat-2",
+        studentId: student.id,
+        amount: 0.1,
+        paymentDate: "2026-04-01",
+        paymentMethod: "Cash",
+        note: "First part"
+    });
+    assert.equal(intentionalRepeat.id, "payment-repeat-2");
+    assert.equal(storage.getPaymentsByStudentId(student.id).length, 2);
+    assert.equal(storage.getStudentById(student.id).totalReceived, 0.2);
+
     const second = storage.addPayment({
         studentId: student.id,
-        amount: 0.2,
+        amount: 0.1,
         paymentDate: "2026-04-02",
         paymentMethod: "Card"
     });
@@ -153,7 +196,7 @@ test("payments use cents, enforce balances, update status, and remain queryable"
     assert.equal(storage.calculatePaymentStatus(20, 100), "Partial");
     assert.equal(storage.calculatePaymentStatus(100, 100), "Paid");
     assert.equal(storage.getPaymentById(second.id).paymentMethod, "Card");
-    assert.equal(storage.getPayments().length, 2);
+    assert.equal(storage.getPayments().length, 3);
     assert.throws(() => storage.updateStudent(student.id, { totalFees: 0.2 }), /less than the student's recorded payments/);
 
     assert.throws(() => storage.addPayment({
@@ -187,7 +230,7 @@ test("payments use cents, enforce balances, update status, and remain queryable"
         paymentMethod: "Cheque"
     }), /paymentMethod must be/);
     storage.softDeleteStudent(student.id);
-    assert.equal(storage.getPaymentsByStudentId(student.id).length, 2);
+    assert.equal(storage.getPaymentsByStudentId(student.id).length, 3);
 });
 
 test("sample data seeds empty collections once and preserves existing records", () => {

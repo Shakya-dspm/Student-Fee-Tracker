@@ -1,12 +1,607 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payments - Student Fee Tracker</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
-</head>
-<body>
+  <head>
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#172b4d" />
+    <title>Payments | FeeTrack</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="../assets/css/style.css" />
+    <link rel="stylesheet" href="../assets/css/components.css" />
+    <link rel="stylesheet" href="../assets/css/dashboard.css" />
+
+    <style>
+      .payment-filter-grid {
+        display: grid;
+        grid-template-columns: minmax(220px, 2fr) repeat(4, minmax(130px, 1fr));
+        gap: 15px;
+        align-items: end;
+      }
+
+      .payment-table-panel {
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .payment-table {
+        min-width: 900px;
+        margin: 0;
+      }
+
+      .payment-table th {
+        white-space: nowrap;
+      }
+
+      .payment-id {
+        color: var(--blue);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .payment-student-name {
+        display: block;
+        color: var(--text);
+        font-weight: 700;
+      }
+
+      .payment-student-id {
+        display: block;
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .payment-amount {
+        color: var(--green);
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .payment-method-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 9px;
+        border-radius: 20px;
+        color: #334155;
+        background: #f1f5f9;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .payment-student-summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 4px;
+        padding: 14px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #f8fafc;
+      }
+
+      .payment-student-summary span {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .payment-student-summary strong {
+        display: block;
+        margin-top: 5px;
+        color: var(--text);
+        font-size: 13px;
+      }
+
+      .payment-form-hint {
+        margin: 0;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.5;
+      }
+
+      .payment-empty {
+        padding: 35px 15px !important;
+        color: var(--muted) !important;
+        text-align: center;
+      }
+
+      .payment-note {
+        display: block;
+        max-width: 180px;
+        overflow: hidden;
+        color: var(--muted);
+        font-size: 12px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      @media (max-width: 1100px) {
+        .payment-filter-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .payment-search-field {
+          grid-column: 1 / -1;
+        }
+      }
+
+      @media (max-width: 575.98px) {
+        .payment-filter-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .payment-search-field {
+          grid-column: auto;
+        }
+
+        .payment-student-summary {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app-shell">
+      <div class="sidebar-backdrop" data-sidebar-close></div>
+
+      <aside class="sidebar" id="app-sidebar" aria-label="Main navigation">
+        <a class="brand" href="../index.html" aria-label="FeeTrack dashboard">
+          <span class="brand-mark">
+            <i class="bi bi-mortarboard-fill" aria-hidden="true"></i>
+          </span>
+          <span class="brand-copy">
+            <span class="brand-name">FeeTrack</span>
+            <span class="brand-caption">Student Fee Management</span>
+          </span>
+        </a>
+
+        <div class="nav-section-label">Workspace</div>
+
+        <nav class="sidebar-nav">
+          <a class="nav-link" href="../index.html">
+            <i class="bi bi-grid-1x2-fill" aria-hidden="true"></i>
+            <span>Dashboard</span>
+          </a>
+
+          <a class="nav-link" href="students.html">
+            <i class="bi bi-people" aria-hidden="true"></i>
+            <span>Students</span>
+          </a>
+
+          <a class="nav-link" href="fees.html">
+            <i class="bi bi-receipt" aria-hidden="true"></i>
+            <span>Fee Management</span>
+          </a>
+
+          <a class="nav-link active" href="payments.html" aria-current="page">
+            <i class="bi bi-arrow-left-right" aria-hidden="true"></i>
+            <span>Payment History</span>
+          </a>
+
+          <a class="nav-link" href="batches.html">
+            <i class="bi bi-collection" aria-hidden="true"></i>
+            <span>Batches</span>
+          </a>
+
+          <a class="nav-link" href="reports.html">
+            <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+            <span>Reports</span>
+          </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <div class="nav-section-label">Support</div>
+
+          <a class="nav-link" href="../README.md">
+            <i class="bi bi-question-circle" aria-hidden="true"></i>
+            <span>Help &amp; Support</span>
+          </a>
+
+          <div class="sidebar-profile">
+            <div class="avatar avatar-sidebar" aria-hidden="true">AK</div>
+            <div class="profile-copy">
+              <span class="profile-name">Amaya Kumari</span>
+              <span class="profile-role">Administrator</span>
+            </div>
+            <button
+              class="icon-button profile-menu-button"
+              type="button"
+              aria-label="Profile menu placeholder"
+            >
+              <i class="bi bi-three-dots" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <button
+            class="icon-button menu-toggle"
+            type="button"
+            aria-label="Open navigation"
+            aria-controls="app-sidebar"
+            aria-expanded="false"
+            data-sidebar-toggle
+          >
+            <i class="bi bi-list" aria-hidden="true"></i>
+          </button>
+
+          <div class="topbar-title">
+            <span class="eyebrow">FINANCIAL MANAGEMENT</span>
+            <h1>Payments</h1>
+          </div>
+
+          <div class="topbar-actions">
+            <button
+              class="icon-button notification-button"
+              type="button"
+              aria-label="Notifications placeholder"
+            >
+              <i class="bi bi-bell" aria-hidden="true"></i>
+            </button>
+
+            <div class="topbar-divider" aria-hidden="true"></div>
+
+            <div class="topbar-user">
+              <div class="avatar avatar-header" aria-hidden="true">AK</div>
+              <div class="topbar-user-copy">
+                <span class="profile-name">Amaya Kumari</span>
+                <span class="profile-role">Administrator</span>
+              </div>
+              <i class="bi bi-chevron-down user-chevron" aria-hidden="true"></i>
+            </div>
+          </div>
+        </header>
+
+        <div class="dashboard-content student-page" data-payments-page>
+          <section class="student-page-intro">
+            <div>
+              <h2>Payment management</h2>
+              <p>
+                Record student payments and track all financial transactions.
+              </p>
+            </div>
+
+            <button
+              class="btn btn-primary student-primary-button"
+              type="button"
+              data-open-payment-form
+            >
+              <i class="bi bi-plus-circle" aria-hidden="true"></i>
+              Record Payment
+            </button>
+          </section>
+
+          <div
+            class="student-notice"
+            role="status"
+            aria-live="polite"
+            data-payment-notice
+            hidden
+          ></div>
+
+          <!-- Payment Summary -->
+          <section
+            class="summary-grid student-summary-grid"
+            aria-label="Payment summary"
+          >
+            <article class="summary-card">
+              <div class="summary-card-top">
+                <span class="summary-icon icon-green">
+                  <i class="bi bi-cash-stack" aria-hidden="true"></i>
+                </span>
+              </div>
+              <p class="metric-label">Total Collected</p>
+              <div class="metric-value currency-value" data-summary-collected>
+                Rs. 0.00
+              </div>
+              <p class="metric-caption">All recorded payments</p>
+              <div class="card-accent accent-green" aria-hidden="true"></div>
+            </article>
+
+            <article class="summary-card">
+              <div class="summary-card-top">
+                <span class="summary-icon icon-blue">
+                  <i class="bi bi-calendar-check" aria-hidden="true"></i>
+                </span>
+              </div>
+              <p class="metric-label">This Month</p>
+              <div class="metric-value currency-value" data-summary-month>
+                Rs. 0.00
+              </div>
+              <p class="metric-caption">Payments received this month</p>
+              <div class="card-accent accent-blue" aria-hidden="true"></div>
+            </article>
+
+            <article class="summary-card">
+              <div class="summary-card-top">
+                <span class="summary-icon icon-violet">
+                  <i class="bi bi-receipt" aria-hidden="true"></i>
+                </span>
+              </div>
+              <p class="metric-label">Transactions</p>
+              <div class="metric-value" data-summary-count>0</div>
+              <p class="metric-caption">Total recorded transactions</p>
+              <div class="card-accent accent-violet" aria-hidden="true"></div>
+            </article>
+
+            <article class="summary-card">
+              <div class="summary-card-top">
+                <span class="summary-icon icon-amber">
+                  <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                </span>
+              </div>
+              <p class="metric-label">Outstanding Fees</p>
+              <div class="metric-value currency-value" data-summary-outstanding>
+                Rs. 0.00
+              </div>
+              <p class="metric-caption">Remaining fees of active students</p>
+              <div class="card-accent accent-amber" aria-hidden="true"></div>
+            </article>
+          </section>
+
+          <!-- Search and Filters -->
+          <section
+            class="panel student-filter-panel"
+            aria-label="Search and filter payments"
+          >
+            <div class="payment-filter-grid">
+              <label class="student-field payment-search-field">
+                <span>Search payments</span>
+                <span class="student-input-wrap">
+                  <i class="bi bi-search" aria-hidden="true"></i>
+                  <input
+                    class="form-control"
+                    type="search"
+                    placeholder="Transaction ID, student name or ID"
+                    data-payment-search
+                  />
+                </span>
+              </label>
+
+              <label class="student-field">
+                <span>Payment Method</span>
+                <select class="form-select" data-payment-method-filter>
+                  <option value="">All methods</option>
+                </select>
+              </label>
+
+              <label class="student-field">
+                <span>From Date</span>
+                <input
+                  class="form-control"
+                  type="date"
+                  data-payment-date-from
+                />
+              </label>
+
+              <label class="student-field">
+                <span>To Date</span>
+                <input class="form-control" type="date" data-payment-date-to />
+              </label>
+
+              <label class="student-field">
+                <span>Sort By</span>
+                <select class="form-select" data-payment-sort>
+                  <option value="date-desc">Newest first</option>
+                  <option value="date-asc">Oldest first</option>
+                  <option value="amount-desc">Highest amount</option>
+                  <option value="amount-asc">Lowest amount</option>
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <!-- Payment History -->
+          <section
+            class="panel payment-table-panel"
+            aria-labelledby="payment-table-title"
+          >
+            <div class="panel-heading student-table-heading">
+              <div>
+                <h3 id="payment-table-title">Payment history</h3>
+                <p><span data-payment-result-count>0</span> transactions</p>
+              </div>
+
+              <span class="student-table-caption">
+                <i class="bi bi-shield-check" aria-hidden="true"></i>
+                Financial records are stored in this browser
+              </span>
+            </div>
+
+            <div class="table-responsive student-table-scroll">
+              <table class="table table-hover align-middle payment-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Transaction ID</th>
+                    <th scope="col">Student</th>
+                    <th scope="col">Batch</th>
+                    <th scope="col">Payment Date</th>
+                    <th scope="col">Method</th>
+                    <th scope="col">Note</th>
+                    <th scope="col" class="text-end">Amount</th>
+                  </tr>
+                </thead>
+
+                <tbody data-payment-rows></tbody>
+              </table>
+            </div>
+          </section>
+
+          <footer class="page-footer">
+            FeeTrack <span aria-hidden="true">·</span>
+            Student Fee Management
+            <span class="footer-year">© 2026</span>
+          </footer>
+        </div>
+      </main>
+    </div>
+
+    <!-- Record Payment Dialog -->
+    <dialog
+      class="student-dialog"
+      data-payment-dialog
+      aria-labelledby="payment-form-title"
+    >
+      <form class="student-dialog-content" data-payment-form>
+        <div class="student-dialog-header">
+          <div>
+            <span class="eyebrow">FINANCIAL TRANSACTION</span>
+            <h2 id="payment-form-title">Record Payment</h2>
+            <p>Enter the payment details for an enrolled student.</p>
+          </div>
+
+          <button
+            class="icon-button"
+            type="button"
+            aria-label="Close form"
+            data-close-payment-form
+          >
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div
+          class="student-form-message"
+          role="alert"
+          data-payment-form-message
+          hidden
+        ></div>
+
+        <div class="student-form-grid">
+          <label class="student-field student-field-wide">
+            <span>Select Student <b aria-hidden="true">*</b></span>
+            <select
+              class="form-select"
+              name="studentId"
+              required
+              data-payment-student
+            >
+              <option value="">Select a student</option>
+            </select>
+            <small data-payment-student-hint
+              >Only active students with outstanding fees are available.</small
+            >
+          </label>
+
+          <div class="student-field student-field-wide">
+            <span>Student Fee Summary</span>
+
+            <div class="payment-student-summary">
+              <div>
+                <span>Total Course Fee</span>
+                <strong data-form-total-fees>Rs. 0.00</strong>
+              </div>
+
+              <div>
+                <span>Already Paid</span>
+                <strong data-form-total-paid>Rs. 0.00</strong>
+              </div>
+
+              <div>
+                <span>Outstanding</span>
+                <strong data-form-outstanding>Rs. 0.00</strong>
+              </div>
+            </div>
+          </div>
+
+          <label class="student-field">
+            <span>Payment Amount (Rs.) <b aria-hidden="true">*</b></span>
+            <input
+              class="form-control"
+              type="number"
+              name="amount"
+              min="0.01"
+              step="0.01"
+              inputmode="decimal"
+              placeholder="Enter amount"
+              required
+              data-payment-amount
+            />
+            <small data-amount-hint
+              >Choose a student to see the available balance.</small
+            >
+          </label>
+
+          <label class="student-field">
+            <span>Payment Date <b aria-hidden="true">*</b></span>
+            <input
+              class="form-control"
+              type="date"
+              name="paymentDate"
+              required
+              data-payment-date
+            />
+          </label>
+
+          <label class="student-field">
+            <span>Payment Method <b aria-hidden="true">*</b></span>
+            <select
+              class="form-select"
+              name="paymentMethod"
+              required
+              data-payment-method
+            >
+              <option value="">Select a method</option>
+            </select>
+          </label>
+
+          <label class="student-field">
+            <span>Note / Remarks</span>
+            <input
+              class="form-control"
+              type="text"
+              name="note"
+              maxlength="2000"
+              placeholder="Optional payment note"
+            />
+          </label>
+
+          <p class="payment-form-hint student-field-wide">
+            <i class="bi bi-info-circle" aria-hidden="true"></i>
+            Once recorded, a payment becomes part of the financial history and
+            cannot be edited or deleted from this page.
+          </p>
+        </div>
+
+        <div class="student-dialog-footer">
+          <button class="btn btn-light" type="button" data-close-payment-form>
+            Cancel
+          </button>
+
+          <button
+            class="btn btn-primary student-primary-button"
+            type="submit"
+            data-save-payment
+          >
+            <i class="bi bi-check2-circle" aria-hidden="true"></i>
+            Save Payment
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="../assets/js/storage.js"></script>
     <script src="../assets/js/payments.js"></script>
-</body>
+  </body>
 </html>
