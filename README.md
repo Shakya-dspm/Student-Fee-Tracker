@@ -19,7 +19,7 @@ Student Fee Tracker helps you organize student enrollment and keep track of cour
 3. Open **Fee Management** to review balances, or choose **Payment History** to record a payment.
 4. Visit **Reports** to review collections or export a CSV summary.
 
-Optional sample records are available from the empty-workspace setup prompt. They are only added when you choose that option; existing records are not silently replaced.
+On a fresh browser workspace, the app automatically loads sample batches, students, and payments so every section has records to demonstrate. The sample data is only added when all record collections are empty; existing records are never replaced.
 
 ## Open the app
 

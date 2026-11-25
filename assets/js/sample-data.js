@@ -99,4 +99,11 @@
     root.FeeTrackSampleData = Object.freeze({
         initializeSampleData
     });
+
+    // Pages opt into automatic demo data by marking this script with data-auto-seed.
+    // The initializer only fills empty collections and never replaces saved records.
+    if (root.document && root.document.currentScript
+        && root.document.currentScript.hasAttribute("data-auto-seed")) {
+        initializeSampleData();
+    }
 }(window));
