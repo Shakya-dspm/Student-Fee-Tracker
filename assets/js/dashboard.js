@@ -110,7 +110,16 @@
                 scales: {
                     x: { grid: { display: false }, border: { display: false } },
                     y: { beginAtZero: true, grid: { color: "#eef2f7" }, border: { display: false },
-                        ticks: { callback: (value) => value ? `${(value / 1000).toLocaleString()}k` : "0" } }
+                        ticks: { callback: (value) => {
+                            const amount = Number(value);
+                            if (!amount) return "0";
+                            // Keep small collections readable; dividing every tick by 1,000
+                            // made sub-thousand values round to the same "0.001k" label.
+                            if (Math.abs(amount) < 1000) {
+                                return amount.toLocaleString("en-LK", { maximumFractionDigits: 2 });
+                            }
+                            return `${(amount / 1000).toLocaleString("en-LK", { maximumFractionDigits: 1 })}k`;
+                        } }
                 }
             }
         });
