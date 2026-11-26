@@ -26,11 +26,19 @@
         return td;
     }
 
-    function start() {
+    async function start() {
         initializeSidebar();
         const page = document.querySelector("[data-reports-page]");
         if (!page) return;
         const notice = page.querySelector("[data-reports-notice]");
+        try {
+            await storage.initialize();
+        } catch (error) {
+            notice.textContent = error.message;
+            notice.classList.add("is-error");
+            notice.hidden = false;
+            return;
+        }
         const setup = page.querySelector("[data-reports-setup]");
         let csvRows = [];
 

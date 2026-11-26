@@ -1,36 +1,30 @@
 # Student Fee Tracker
 
-Student Fee Tracker helps you organize student enrollment and keep track of course fees and payments in one place.
+Student Fee Tracker is a vanilla JavaScript and Bootstrap frontend connected to the FreeProjectAPI Fees Tracking service through a small same-origin Node.js proxy.
 
-## What you can do
+## API connection
 
-- **See the overall picture:** The dashboard summarizes enrolled students, expected fees, payments received, and outstanding balances. Charts and recent activity reflect your saved records.
-- **Manage batches:** Create and update batches, review their students, and find batches with search and filters. A batch cannot be removed while students are assigned to it.
-- **Keep student records:** Register students in a batch, update their details, and find them by name, ID, batch, or payment status. Student profiles show fee balances and payment history. Deleted students can be restored, and their payment history is retained.
-- **Track fee balances:** The Fee Management page shows each active student's course fee, amount paid, remaining balance, and payment status.
-- **Record payments:** Accept partial or full payments using the available payment methods. The tracker checks the amount against the student's remaining balance and updates their balance and payment history after a successful receipt.
-- **Review and export reports:** Compare payment statuses and batch totals, review monthly collections, and download a CSV report.
-- **Search and move between records:** Use the dashboard search and page filters to find students, batches, and payments, then open related profiles and histories.
+- Base URL: `https://api.freeprojectapi.com`
+- Enrollment and student fee records use `/api/FeesTracking/getAllEnrollments`, `/{id}`, `/addNewEnrollment`, `/updateEnrollment`, `/SoftDeleteById`, and `/DeleteById`.
+- Batch records use `/api/FeesTracking/batches` and `/api/FeesTracking/batches/{id}`.
+- The API contract is published in the provider's [Fees Tracking API documentation](https://freeprojectapi.com/apis/fees-tracking/) and live [OpenAPI document](https://api.freeprojectapi.com/swagger/v1/swagger.json).
 
-## Getting started
-
-1. Open the Dashboard. On a new workspace, follow its setup prompt to create a batch.
-2. Register students and assign each one to an existing batch.
-3. Open **Fee Management** to review balances, or choose **Payment History** to record a payment.
-4. Visit **Reports** to review collections or export a CSV summary.
-
-On a fresh browser workspace, the app automatically loads sample batches, students, and payments so every section has records to demonstrate. The sample data is only added when all record collections are empty; existing records are never replaced.
-
-## Open the app
-
-Run the project from a local web server, then open its address in your browser. For example, from the project folder you can run:
+The app loads current enrollments and batches when a page opens. Student and batch creates, edits, deletes, restores, and fee payment totals are sent to the API. The provider does not send browser CORS headers, so serve the app with the included proxy instead of Python's static server. Start it with Node.js:
 
 ```sh
-python -m http.server 8000
+node server.js
 ```
 
-Then visit `http://localhost:8000/`.
+Then visit `http://localhost:8000/`. Set `PORT` to use a different port.
 
-## Your records
+## Data supported by this API
 
-The tracker saves records in the browser where you use it. They remain available when you return to the app in that browser, but are not automatically shared with another browser or device.
+The API stores a student's name, contact number, batch, total fee, three installment amounts, total received, status, and deleted flag. Batch records contain a name only. Course name, batch schedule, student email/address, and registration dates are not part of this API schema and are not saved by the app.
+
+The service has no payment transaction endpoint. The total received is updated on the API, while payment receipts (date, amount, method, and note) are kept in the current browser's `localStorage`. Receipt history is therefore browser-specific and is not shared between browsers. Existing API totals cannot be reconstructed into individual receipt history.
+
+When deploying, configure the web host or backend to proxy `/api/FeesTracking/*` to `https://api.freeprojectapi.com/api/FeesTracking/*` on the server. The browser client uses the same-origin `/api/FeesTracking/*` path.
+
+## Shared practice service
+
+The provider describes this as a practice API. Its records are shared with other users, and these endpoints do not provide account-level isolation for this app. Use synthetic coursework data only. Creating or changing records affects the live shared service. Availability and browser CORS access are controlled by the provider.

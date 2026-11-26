@@ -42,7 +42,7 @@
                 <div class="sidebar-profile">
                     <div class="avatar avatar-sidebar" aria-hidden="true">AK</div>
                     <div class="profile-copy"><span class="profile-name">Amaya Kumari</span><span class="profile-role">Administrator</span></div>
-                    <button class="icon-button profile-menu-button" type="button" aria-label="Profile menu placeholder"><i class="bi bi-three-dots" aria-hidden="true"></i></button>
+
                 </div>
             </div>
         </aside>
@@ -57,12 +57,11 @@
                     <h1>Batches</h1>
                 </div>
                 <div class="topbar-actions">
-                    <button class="icon-button notification-button" type="button" aria-label="Notifications placeholder"><i class="bi bi-bell" aria-hidden="true"></i></button>
+
                     <div class="topbar-divider" aria-hidden="true"></div>
                     <div class="topbar-user">
                         <div class="avatar avatar-header" aria-hidden="true">AK</div>
                         <div class="topbar-user-copy"><span class="profile-name">Amaya Kumari</span><span class="profile-role">Administrator</span></div>
-                        <i class="bi bi-chevron-down user-chevron" aria-hidden="true"></i>
                     </div>
                 </div>
             </header>
@@ -73,7 +72,7 @@
                         <h2>Batch directory</h2>
                         <p>Manage course batches, schedules, and student assignments.</p>
                     </div>
-                    <button class="btn btn-primary student-primary-button" type="button" data-open-batch-form>
+                    <button class="btn btn-primary student-primary-button" type="button" data-open-batch-form disabled>
                         <i class="bi bi-collection-plus" aria-hidden="true"></i> Add Batch
                     </button>
                 </section>
@@ -88,18 +87,18 @@
                     </article>
                     <article class="summary-card">
                         <div class="summary-card-top"><span class="summary-icon icon-violet"><i class="bi bi-calendar-check" aria-hidden="true"></i></span></div>
-                        <p class="metric-label">Active Batches</p><div class="metric-value" data-summary-active>0</div>
-                        <p class="metric-caption">Currently running batches</p><div class="card-accent accent-violet" aria-hidden="true"></div>
+                        <p class="metric-label">Assigned Students</p><div class="metric-value" data-summary-active>0</div>
+                        <p class="metric-caption">Active students linked to a batch</p><div class="card-accent accent-violet" aria-hidden="true"></div>
                     </article>
                     <article class="summary-card">
                         <div class="summary-card-top"><span class="summary-icon icon-green"><i class="bi bi-calendar-x" aria-hidden="true"></i></span></div>
-                        <p class="metric-label">Completed Batches</p><div class="metric-value" data-summary-completed>0</div>
-                        <p class="metric-caption">Batches that have ended</p><div class="card-accent accent-green" aria-hidden="true"></div>
+                        <p class="metric-label">Unassigned Students</p><div class="metric-value" data-summary-completed>0</div>
+                        <p class="metric-caption">Students without a matching batch</p><div class="card-accent accent-green" aria-hidden="true"></div>
                     </article>
                     <article class="summary-card">
                         <div class="summary-card-top"><span class="summary-icon icon-amber"><i class="bi bi-people" aria-hidden="true"></i></span></div>
                         <p class="metric-label">Total Students</p><div class="metric-value" data-summary-students>0</div>
-                        <p class="metric-caption">Across all batches</p><div class="card-accent accent-amber" aria-hidden="true"></div>
+                        <p class="metric-caption">All active students</p><div class="card-accent accent-amber" aria-hidden="true"></div>
                     </article>
                 </section>
 
@@ -107,23 +106,13 @@
                     <div class="student-filter-grid">
                         <label class="student-field student-search-field">
                             <span>Search batches</span>
-                            <span class="student-input-wrap"><i class="bi bi-search" aria-hidden="true"></i><input class="form-control" type="search" placeholder="Batch name or course" data-batch-search></span>
-                        </label>
-                        <label class="student-field">
-                            <span>Status</span>
-                            <select class="form-select" data-batch-status-filter>
-                                <option value="">All statuses</option>
-                                <option value="active">Active</option>
-                                <option value="completed">Completed</option>
-                            </select>
+                            <span class="student-input-wrap"><i class="bi bi-search" aria-hidden="true"></i><input class="form-control" type="search" placeholder="Batch name" data-batch-search></span>
                         </label>
                         <label class="student-field">
                             <span>Sort by</span>
                             <select class="form-select" data-batch-sort>
                                 <option value="name-asc">Name A–Z</option>
                                 <option value="name-desc">Name Z–A</option>
-                                <option value="start-desc">Newest start date</option>
-                                <option value="start-asc">Oldest start date</option>
                                 <option value="students-desc">Most students</option>
                             </select>
                         </label>
@@ -136,7 +125,7 @@
                             <h3 id="batch-table-title">All batches</h3>
                             <p><span data-result-count>0</span> records</p>
                         </div>
-                        <span class="student-table-caption"><i class="bi bi-shield-check" aria-hidden="true"></i> Batch data stays in this browser</span>
+                        <span class="student-table-caption"><i class="bi bi-cloud-check" aria-hidden="true"></i> Batches sync with Fees Tracking API</span>
                     </div>
                     <div class="table-responsive student-table-scroll">
                         <table class="table table-hover align-middle student-table">
@@ -144,10 +133,6 @@
                                 <tr>
                                     <th scope="col">Batch ID</th>
                                     <th scope="col">Batch Name</th>
-                                    <th scope="col">Course</th>
-                                    <th scope="col">Start Date</th>
-                                    <th scope="col">End Date</th>
-                                    <th scope="col">Status</th>
                                     <th scope="col" class="text-end">Students</th>
                                     <th scope="col" class="text-end">Actions</th>
                                 </tr>
@@ -167,7 +152,7 @@
                 <div>
                     <span class="eyebrow">BATCH PROFILE</span>
                     <h2 id="batch-form-title" data-form-title>Add Batch</h2>
-                    <p>Enter the batch name, course, and schedule details.</p>
+                    <p>Enter a batch name. The connected API stores batch names only.</p>
                 </div>
                 <button class="icon-button" type="button" aria-label="Close form" data-close-batch-form><i class="bi bi-x-lg" aria-hidden="true"></i></button>
             </div>
@@ -176,24 +161,6 @@
                 <label class="student-field student-field-wide">
                     <span>Batch Name <b aria-hidden="true">*</b></span>
                     <input class="form-control" name="batchName" type="text" maxlength="120" autocomplete="off" required>
-                </label>
-                <label class="student-field student-field-wide">
-                    <span>Course Name <b aria-hidden="true">*</b></span>
-                    <input class="form-control" name="courseName" type="text" maxlength="120" autocomplete="off" required>
-                </label>
-                <label class="student-field student-field-wide">
-                    <span>Description</span>
-                    <textarea class="form-control" name="description" rows="3" maxlength="2000" autocomplete="off"></textarea>
-                    <small>Optional description of the batch</small>
-                </label>
-                <label class="student-field">
-                    <span>Start Date <b aria-hidden="true">*</b></span>
-                    <input class="form-control" name="startDate" type="date" required>
-                </label>
-                <label class="student-field">
-                    <span>End Date <b aria-hidden="true">*</b></span>
-                    <input class="form-control" name="endDate" type="date" required>
-                    <small>Must be on or after start date</small>
                 </label>
             </div>
             <div class="student-dialog-footer">
@@ -204,7 +171,6 @@
     </dialog>
 
     <script src="../assets/js/storage.js"></script>
-    <script src="../assets/js/sample-data.js" data-auto-seed></script>
     <script src="../assets/js/batches.js"></script>
 </body>
 </html>

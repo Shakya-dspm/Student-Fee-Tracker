@@ -42,7 +42,7 @@
                 <div class="sidebar-profile">
                     <div class="avatar avatar-sidebar" aria-hidden="true">AK</div>
                     <div class="profile-copy"><span class="profile-name">Amaya Kumari</span><span class="profile-role">Administrator</span></div>
-                    <button class="icon-button profile-menu-button" type="button" aria-label="Profile menu placeholder"><i class="bi bi-three-dots" aria-hidden="true"></i></button>
+
                 </div>
             </div>
         </aside>
@@ -57,12 +57,11 @@
                     <h1>Students</h1>
                 </div>
                 <div class="topbar-actions">
-                    <button class="icon-button notification-button" type="button" aria-label="Notifications placeholder"><i class="bi bi-bell" aria-hidden="true"></i></button>
+
                     <div class="topbar-divider" aria-hidden="true"></div>
                     <div class="topbar-user">
                         <div class="avatar avatar-header" aria-hidden="true">AK</div>
                         <div class="topbar-user-copy"><span class="profile-name">Amaya Kumari</span><span class="profile-role">Administrator</span></div>
-                        <i class="bi bi-chevron-down user-chevron" aria-hidden="true"></i>
                     </div>
                 </div>
             </header>
@@ -73,7 +72,7 @@
                         <h2>Student directory</h2>
                         <p>Manage student profiles, course fees, and payment status.</p>
                     </div>
-                    <button class="btn btn-primary student-primary-button" type="button" data-open-student-form>
+                    <button class="btn btn-primary student-primary-button" type="button" data-open-student-form disabled>
                         <i class="bi bi-person-plus" aria-hidden="true"></i> Add Student
                     </button>
                 </section>
@@ -129,7 +128,6 @@
                                 <option value="name-desc">Name Z–A</option>
                                 <option value="fees-desc">Highest course fee</option>
                                 <option value="balance-desc">Highest balance</option>
-                                <option value="registration-desc">Newest registration</option>
                             </select>
                         </label>
                         <label class="student-archive-toggle">
@@ -146,7 +144,7 @@
                             <h3 id="student-table-title">All students</h3>
                             <p><span data-result-count>0</span> records</p>
                         </div>
-                        <span class="student-table-caption"><i class="bi bi-shield-check" aria-hidden="true"></i> Fee data stays in this browser</span>
+                        <span class="student-table-caption"><i class="bi bi-cloud-check" aria-hidden="true"></i> Student fee records sync with the API</span>
                     </div>
                     <div class="table-responsive student-table-scroll">
                         <table class="table table-hover align-middle student-table">
@@ -194,14 +192,6 @@
                     <small>Use a Sri Lankan mobile number, e.g. 0771234567.</small>
                 </label>
                 <label class="student-field">
-                    <span>Email Address</span>
-                    <input class="form-control" name="email" type="email" maxlength="254" autocomplete="email">
-                </label>
-                <label class="student-field student-field-wide">
-                    <span>Address</span>
-                    <textarea class="form-control" name="address" rows="2" maxlength="1000" autocomplete="street-address"></textarea>
-                </label>
-                <label class="student-field">
                     <span>Select Batch <b aria-hidden="true">*</b></span>
                     <select class="form-select" name="batchId" required data-student-batch-select><option value="">Select a batch</option></select>
                 </label>
@@ -217,10 +207,6 @@
                         <label class="student-field"><span>Installment 3 (Rs.)</span><input class="form-control" name="emi3" type="number" min="0" step="0.01" inputmode="decimal"></label>
                     </div>
                 </fieldset>
-                <label class="student-field">
-                    <span>Registration Date <b aria-hidden="true">*</b></span>
-                    <input class="form-control" name="registrationDate" type="date" required>
-                </label>
             </div>
             <div class="student-dialog-footer">
                 <button class="btn btn-light" type="button" data-close-student-form>Cancel</button>
@@ -230,7 +216,6 @@
     </dialog>
 
     <script src="../assets/js/storage.js"></script>
-    <script src="../assets/js/sample-data.js" data-auto-seed></script>
     <script src="../assets/js/students.js"></script>
 </body>
 </html>

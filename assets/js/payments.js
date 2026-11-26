@@ -178,7 +178,7 @@
 
       const batch = state.batches.find((item) => item.id === student.batchId);
 
-      return batch ? batch.batchName : "Batch unavailable";
+      return batch ? batch.batchName : `Batch ID ${student.batchId} (name unavailable)`;
     }
 
     function getOutstanding(student) {
@@ -192,8 +192,8 @@
     }
 
     function renderSummary() {
-      const totalCollected = state.payments.reduce((total, payment) => {
-        return total + Number(payment.amount || 0);
+      const totalCollected = state.students.reduce((total, student) => {
+        return total + Number(student.totalReceived || 0);
       }, 0);
 
       const currentMonth = getToday().slice(0, 7);
@@ -228,11 +228,13 @@
     }
 
     function populateMethodFilters() {
-      methodFilter.replaceChildren(createElement("option", "", "All methods"));
+      const allMethodsOption = createElement("option", "", "All methods");
+      allMethodsOption.value = "";
+      methodFilter.replaceChildren(allMethodsOption);
 
-      paymentMethodSelect.replaceChildren(
-        createElement("option", "", "Select a method"),
-      );
+      const methodPlaceholder = createElement("option", "", "Select a method");
+      methodPlaceholder.value = "";
+      paymentMethodSelect.replaceChildren(methodPlaceholder);
 
       state.methods.forEach((method) => {
         const filterOption = createElement("option", "", method);
@@ -248,9 +250,9 @@
     function populateStudentOptions() {
       const previousValue = studentSelect.value;
 
-      studentSelect.replaceChildren(
-        createElement("option", "", "Select a student"),
-      );
+      const studentPlaceholder = createElement("option", "", "Select a student");
+      studentPlaceholder.value = "";
+      studentSelect.replaceChildren(studentPlaceholder);
 
       const availableStudents = state.students
         .filter((student) => {
@@ -542,7 +544,7 @@
       }
     }
 
-    function handlePaymentSubmit(event) {
+    async function handlePaymentSubmit(event) {
       event.preventDefault();
       clearFormMessage();
 
@@ -591,7 +593,7 @@
       saveButton.disabled = true;
 
       try {
-        storage.addPayment(paymentData);
+        await storage.addPayment(paymentData);
 
         render();
         closeForm();
@@ -652,8 +654,19 @@
     }
   }
 
-  function start() {
+  async function start() {
     initializeSidebar();
+    try {
+      await storage.initialize();
+    } catch (error) {
+      const notice = document.querySelector("[data-payment-notice]");
+      if (notice) {
+        notice.textContent = error.message;
+        notice.classList.add("is-error");
+        notice.hidden = false;
+      }
+      return;
+    }
 
     const page = document.querySelector("[data-payments-page]");
 

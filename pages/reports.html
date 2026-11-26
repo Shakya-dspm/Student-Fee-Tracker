@@ -39,7 +39,7 @@
                 <div class="topbar-actions"><button class="btn btn-primary student-primary-button" type="button" data-export-report><i class="bi bi-download" aria-hidden="true"></i> Export CSV</button></div>
             </header>
             <div class="dashboard-content student-page" data-reports-page>
-                <section class="student-page-intro"><div><h2>Fee and collection reports</h2><p>Current totals are calculated from this browser's saved student and payment records.</p></div></section>
+                <section class="student-page-intro"><div><h2>Fee and collection reports</h2><p>Student fee totals load from the API. Receipt history and monthly transaction details are stored in this browser.</p></div></section>
                 <div class="student-notice" role="status" aria-live="polite" data-reports-notice hidden></div>
                 <div class="student-notice" role="status" aria-live="polite" data-reports-setup hidden></div>
                 <section class="summary-grid student-summary-grid" aria-label="Report summary">
@@ -58,7 +58,6 @@
         </main>
     </div>
     <script src="../assets/js/storage.js"></script>
-    <script src="../assets/js/sample-data.js" data-auto-seed></script>
     <script src="../assets/js/reports.js"></script>
 </body>
 </html>

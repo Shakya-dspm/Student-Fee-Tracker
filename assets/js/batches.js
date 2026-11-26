@@ -14,51 +14,6 @@
         return element;
     }
 
-    function formatNumber(value) {
-        return new Intl.NumberFormat("en-LK", {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2
-        }).format(Number(value) || 0);
-    }
-
-    function formatDate(value) {
-        if (!value) {
-            return "—";
-        }
-        const date = new Date(`${value}T00:00:00`);
-        if (!Number.isFinite(date.getTime())) {
-            return String(value);
-        }
-        return new Intl.DateTimeFormat("en-LK", {
-            day: "numeric",
-            month: "short",
-            year: "numeric"
-        }).format(date);
-    }
-
-    function todayLocal() {
-        const date = new Date();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        return `${date.getFullYear()}-${month}-${day}`;
-    }
-
-    function batchStatus(batch) {
-        const todayString = todayLocal();
-        if (todayString > batch.endDate) {
-            return "completed";
-        }
-        return "active";
-    }
-
-    function batchStatusLabel(status) {
-        return status === "active" ? "Active" : "Completed";
-    }
-
-    function batchStatusClass(status) {
-        return status === "active" ? "status-active" : "status-completed";
-    }
-
     function showNotice(container, message, kind) {
         if (!container) {
             return;
@@ -146,25 +101,18 @@
         }
 
         function renderSummary() {
-            const active = state.batches.filter((batch) => batchStatus(batch) === "active").length;
-            const completed = state.batches.filter((batch) => batchStatus(batch) === "completed").length;
-            const totalStudents = state.batches.reduce((total, batch) => {
-                return total + state.students.filter((student) => student.batchId === batch.id && !student.isSoftDelete).length;
-            }, 0);
+            const activeStudents = state.students.filter((student) => !student.isSoftDelete);
+            const batchIds = new Set(state.batches.map((batch) => batch.id));
+            const assignedCount = activeStudents.filter((student) => batchIds.has(student.batchId)).length;
             setText(page, "[data-summary-total]", String(state.batches.length));
-            setText(page, "[data-summary-active]", String(active));
-            setText(page, "[data-summary-completed]", String(completed));
-            setText(page, "[data-summary-students]", String(totalStudents));
+            setText(page, "[data-summary-active]", String(assignedCount));
+            setText(page, "[data-summary-completed]", String(activeStudents.length - assignedCount));
+            setText(page, "[data-summary-students]", String(activeStudents.length));
         }
 
         function batchMatchesFilters(batch) {
             const search = page.querySelector("[data-batch-search]").value.trim().toLowerCase();
-            if (search && !`${batch.batchName} ${batch.courseName} ${batch.id}`.toLowerCase().includes(search)) {
-                return false;
-            }
-
-            const selectedStatus = page.querySelector("[data-batch-status-filter]").value;
-            if (selectedStatus && batchStatus(batch) !== selectedStatus) {
+            if (search && !`${batch.batchName} ${batch.id}`.toLowerCase().includes(search)) {
                 return false;
             }
 
@@ -178,10 +126,6 @@
                 switch (sortBy) {
                     case "name-desc":
                         return right.batchName.localeCompare(left.batchName, "en");
-                    case "start-desc":
-                        return String(right.startDate || "").localeCompare(String(left.startDate || "")) || left.batchName.localeCompare(right.batchName, "en");
-                    case "start-asc":
-                        return String(left.startDate || "").localeCompare(String(right.startDate || "")) || left.batchName.localeCompare(right.batchName, "en");
                     case "students-desc": {
                         const leftCount = state.students.filter((student) => student.batchId === left.id && !student.isSoftDelete).length;
                         const rightCount = state.students.filter((student) => student.batchId === right.id && !student.isSoftDelete).length;
@@ -202,23 +146,16 @@
             const visible = sortBatches(state.batches.filter(batchMatchesFilters));
             const fragment = document.createDocumentFragment();
             visible.forEach((batch) => {
-                const status = batchStatus(batch);
                 const row = document.createElement("tr");
                 const idCell = createElement("td", "batch-id-cell", batch.id);
                 const nameCell = createElement("td", "batch-name-cell", batch.batchName);
-                const courseCell = createElement("td", "", batch.courseName);
-                const startCell = createElement("td", "", formatDate(batch.startDate));
-                const endCell = createElement("td", "", formatDate(batch.endDate));
-                const statusCell = document.createElement("td");
-                const statusBadge = createElement("span", `status-badge ${batchStatusClass(status)}`, batchStatusLabel(status));
-                statusCell.append(statusBadge);
                 const studentCell = createElement("td", "text-end batch-student-cell", studentCountFor(batch));
                 const actionsCell = createElement("td", "text-end");
                 const actions = createElement("div", "student-row-actions");
                 actions.append(makeActionButton("bi-pencil", "Edit batch", "edit", batch.id));
                 actions.append(makeActionButton("bi-trash", "Delete batch", "delete", batch.id, "is-danger"));
                 actionsCell.append(actions);
-                row.append(idCell, nameCell, courseCell, startCell, endCell, statusCell, studentCell, actionsCell);
+                row.append(idCell, nameCell, studentCell, actionsCell);
                 fragment.append(row);
             });
 
@@ -227,7 +164,7 @@
                 const cell = createElement("td", "student-table-empty", state.batches.length === 0
                     ? "No batches yet. Create your first batch to start registering students."
                     : "No batches match these filters.");
-                cell.colSpan = 8;
+                cell.colSpan = 4;
                 row.append(cell);
                 fragment.append(row);
             }
@@ -238,6 +175,7 @@
 
         function render() {
             loadData();
+            page.querySelector("[data-open-batch-form]").disabled = false;
             renderSummary();
             renderRows();
         }
@@ -259,10 +197,6 @@
             form.reset();
             clearFormMessage();
             form.elements.batchName.value = batch ? batch.batchName : "";
-            form.elements.courseName.value = batch ? batch.courseName : "";
-            form.elements.description.value = batch ? batch.description || "" : "";
-            form.elements.startDate.value = batch ? batch.startDate : todayLocal();
-            form.elements.endDate.value = batch ? batch.endDate : todayLocal();
             document.querySelector("[data-form-title]").textContent = batch ? "Edit Batch" : "Add Batch";
             const saveIcon = createElement("i", "bi bi-check2");
             saveIcon.setAttribute("aria-hidden", "true");
@@ -284,45 +218,17 @@
         function readFormData() {
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
-            const startDate = data.startDate.trim();
-            const endDate = data.endDate.trim();
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
-                throw new TypeError("Start date must use YYYY-MM-DD format.");
-            }
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
-                throw new TypeError("End date must use YYYY-MM-DD format.");
-            }
-            const startParsed = Date.parse(`${startDate}T00:00:00.000Z`);
-            const endParsed = Date.parse(`${endDate}T00:00:00.000Z`);
-            if (!Number.isFinite(startParsed) || new Date(startParsed).toISOString().slice(0, 10) !== startDate) {
-                throw new TypeError("Start date must be a valid calendar date.");
-            }
-            if (!Number.isFinite(endParsed) || new Date(endParsed).toISOString().slice(0, 10) !== endDate) {
-                throw new TypeError("End date must be a valid calendar date.");
-            }
-            if (startDate > endDate) {
-                throw new TypeError("Start date cannot be after end date.");
-            }
-            return {
-                batchName: data.batchName.trim(),
-                courseName: data.courseName.trim(),
-                description: data.description.trim(),
-                startDate,
-                endDate
-            };
+            return { batchName: data.batchName.trim() };
         }
 
         function isDuplicate(data) {
             return state.batches.some((batch) => {
                 return batch.id !== state.editingId
-                    && batch.batchName.toLowerCase() === data.batchName.toLowerCase()
-                    && batch.courseName.toLowerCase() === data.courseName.toLowerCase()
-                    && batch.startDate === data.startDate
-                    && batch.endDate === data.endDate;
+                    && batch.batchName.toLowerCase() === data.batchName.toLowerCase();
             });
         }
 
-        function saveBatch(event) {
+        async function saveBatch(event) {
             event.preventDefault();
             if (state.isSaving) {
                 return;
@@ -347,8 +253,8 @@
             saveButton.disabled = true;
             try {
                 const saved = state.editingId
-                    ? storage.updateBatch(state.editingId, data)
-                    : storage.addBatch(data);
+                    ? await storage.updateBatch(state.editingId, data)
+                    : await storage.addBatch(data);
                 if (!saved) {
                     throw new Error("The batch record could not be saved because it no longer exists.");
                 }
@@ -364,7 +270,7 @@
             }
         }
 
-        function handleRowAction(event) {
+        async function handleRowAction(event) {
             const button = event.target.closest("[data-batch-action]");
             if (!button) {
                 return;
@@ -391,7 +297,7 @@
                             break;
                         }
                         if (window.confirm(`Delete batch "${batch.batchName}"? This cannot be undone.`)) {
-                            if (!storage.deleteBatch(batch.id)) {
+                            if (!await storage.deleteBatch(batch.id)) {
                                 throw new Error("The batch record no longer exists.");
                             }
                             render();
@@ -409,11 +315,10 @@
 
         page.querySelector("[data-open-batch-form]").addEventListener("click", () => openForm(null));
         page.querySelector("[data-batch-search]").addEventListener("input", renderRows);
-        page.querySelector("[data-batch-status-filter]").addEventListener("change", renderRows);
         page.querySelector("[data-batch-sort]").addEventListener("change", renderRows);
         rows.addEventListener("click", handleRowAction);
         form.addEventListener("submit", saveBatch);
-        page.querySelectorAll("[data-close-batch-form]").forEach((button) => button.addEventListener("click", closeForm));
+        document.querySelectorAll("[data-close-batch-form]").forEach((button) => button.addEventListener("click", closeForm));
         dialog.addEventListener("click", (event) => {
             if (event.target === dialog) {
                 closeForm();
@@ -424,12 +329,21 @@
             render();
         } catch (error) {
             console.error("Unable to load the batch directory.", error);
-            showNotice(notice, error.message || "Unable to load batch records from LocalStorage.", "error");
+            showNotice(notice, error.message || "Unable to load batch records from the API.", "error");
         }
     }
 
-    function start() {
+    async function start() {
         initializeSidebar();
+        const notice = document.querySelector("[data-batch-notice]");
+        showNotice(notice, "Loading batches and students from the API…");
+        try {
+            await storage.initialize();
+        } catch (error) {
+            showNotice(notice, error.message, "error");
+            return;
+        }
+        if (notice) notice.hidden = true;
         const directory = document.querySelector("[data-batches-page]");
         if (directory) {
             initializeBatchDirectory(directory);

@@ -59,7 +59,7 @@
         }
     }
 
-    function setSetupGuide(batchCount, studentCount, isEmptyWorkspace) {
+    function setSetupGuide(batchCount, studentCount) {
         const guide = document.querySelector("[data-dashboard-setup]");
         if (!guide) return;
         guide.hidden = batchCount > 0 && studentCount > 0;
@@ -69,45 +69,11 @@
             ? "Start by creating your first batch"
             : "Add your first student to begin tracking fees");
         const copy = createElement("span", "", batchCount === 0
-            ? "Students need a batch before they can be registered. Sample data is optional and is never added automatically."
+            ? "Create a batch before registering students."
             : "Choose a batch, then add students and record their payments.");
         const link = createElement("a", "text-link", batchCount === 0 ? "Create a batch" : "Add a student");
         link.href = batchCount === 0 ? "pages/batches.html" : "pages/students.html";
         guide.append(heading, copy, link);
-        if (isEmptyWorkspace) {
-            const sampleButton = createElement("button", "action-button", "Load optional sample data");
-            sampleButton.type = "button";
-            sampleButton.addEventListener("click", () => {
-                sampleButton.disabled = true;
-                const initialize = () => {
-                    try {
-                        const result = window.FeeTrackSampleData.initializeSampleData();
-                        if (result.batchesAdded || result.studentsAdded || result.paymentsAdded) {
-                            window.location.reload();
-                        } else {
-                            sampleButton.disabled = false;
-                            sampleButton.textContent = "No sample data was added; saved collections were preserved.";
-                        }
-                    } catch (error) {
-                        sampleButton.disabled = false;
-                        sampleButton.textContent = error.message || "Unable to load sample data.";
-                    }
-                };
-                if (window.FeeTrackSampleData) {
-                    initialize();
-                } else {
-                    const script = document.createElement("script");
-                    script.src = "assets/js/sample-data.js";
-                    script.onload = initialize;
-                    script.onerror = () => {
-                        sampleButton.disabled = false;
-                        sampleButton.textContent = "Sample data could not be loaded.";
-                    };
-                    document.body.append(script);
-                }
-            });
-            guide.append(sampleButton);
-        }
     }
 
     function renderMonthlyChart(payments, year) {
@@ -259,7 +225,7 @@
             }
             row.append(nameCell,
                 createElement("td", "student-id-cell", student ? student.id : payment.studentId),
-                createElement("td", "", batch ? batch.batchName : "Batch unavailable"),
+                createElement("td", "", batch ? batch.batchName : `Batch ID ${student ? student.batchId : "unknown"} (name unavailable)`),
                 createElement("td", "", new Date(`${payment.paymentDate}T00:00:00`).toLocaleDateString("en-LK")),
                 createElement("td", "amount-cell", formatCurrency(payment.amount)),
                 createElement("td", "", payment.paymentMethod),
@@ -273,7 +239,7 @@
         if (!list) return;
         const batchesById = new Map(batches.map((batch) => [batch.id, batch]));
         const recent = students.filter((student) => !student.isSoftDelete)
-            .sort((a, b) => String(b.registrationDate).localeCompare(String(a.registrationDate))).slice(0, 4);
+            .sort((a, b) => a.studentName.localeCompare(b.studentName)).slice(0, 4);
         list.replaceChildren();
         if (!recent.length) {
             list.append(createElement("p", "student-table-empty", "No student registrations yet."));
@@ -286,7 +252,7 @@
             const copy = createElement("div", "registration-copy");
             copy.append(createElement("strong", "", student.studentName));
             const batch = batchesById.get(student.batchId);
-            copy.append(createElement("small", "", `${batch ? batch.batchName : "Batch unavailable"} · Registered ${student.registrationDate}`));
+            copy.append(createElement("small", "", batch ? batch.batchName : `Batch ID ${student.batchId} (name unavailable)`));
             const arrow = createElement("i", "bi bi-arrow-up-right registration-arrow");
             arrow.setAttribute("aria-hidden", "true");
             item.append(avatar, copy, arrow);
@@ -319,7 +285,7 @@
         setText("[data-dashboard-outstanding]", formatCurrency(outstanding));
         setText("[data-dashboard-outstanding-caption]", `Across ${students.filter((student) => student.totalReceived < student.totalFees).length.toLocaleString()} active students`);
         setText("[data-dashboard-year-total]", formatCurrency(yearTotal));
-        setText("[data-dashboard-year-caption]", `Collected in ${currentYear}`);
+        setText("[data-dashboard-year-caption]", `Receipts saved in this browser during ${currentYear}`);
         setText("[data-dashboard-year-label]", String(currentYear));
         setText("[data-progress-received]", formatCurrency(received));
         setText("[data-progress-fees]", `of ${formatCurrency(totalFees)}`);
@@ -331,7 +297,7 @@
             const fill = progressBar.querySelector(".progress-fill");
             if (fill) fill.style.width = `${progress}%`;
         }
-        setSetupGuide(batches.length, students.length, batches.length === 0 && allStudents.length === 0 && payments.length === 0);
+        setSetupGuide(batches.length, students.length);
         renderMonthlyChart(payments, currentYear);
         renderStatusChart(students);
         renderBatchChart(batches, students);
@@ -339,10 +305,20 @@
         renderRegistrations(students, batches);
     }
 
-    function start() {
+    async function start() {
         initializeSidebar();
         setCurrentDate();
         const notice = document.querySelector("[data-dashboard-notice]");
+        try {
+            await storage.initialize();
+        } catch (error) {
+            if (notice) {
+                notice.textContent = error.message;
+                notice.hidden = false;
+                notice.classList.add("is-error");
+            }
+            return;
+        }
         const search = document.querySelector("[data-dashboard-search]");
         if (search) {
             search.addEventListener("keydown", (event) => {
@@ -365,7 +341,7 @@
                         window.location.href = `pages/payments.html?q=${encodeURIComponent(query)}`;
                         return;
                     }
-                    const batch = batches.find((item) => `${item.batchName} ${item.courseName} ${item.id}`.toLocaleLowerCase().includes(normalized));
+                    const batch = batches.find((item) => `${item.batchName} ${item.id}`.toLocaleLowerCase().includes(normalized));
                     if (batch) {
                         window.location.href = `pages/batches.html?q=${encodeURIComponent(query)}`;
                         return;
@@ -387,7 +363,7 @@
             renderDashboard();
         } catch (error) {
             if (notice) {
-                notice.textContent = error.message || "Unable to load dashboard data from this browser.";
+                notice.textContent = error.message || "Unable to load dashboard data from the API.";
                 notice.classList.add("is-error");
                 notice.hidden = false;
             }

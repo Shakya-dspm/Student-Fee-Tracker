@@ -31,13 +31,6 @@
         return Math.max(0, feesInCents - receivedInCents) / 100;
     }
 
-    function todayLocal() {
-        const date = new Date();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        return `${date.getFullYear()}-${month}-${day}`;
-    }
-
     function formatDate(value) {
         if (!value) {
             return "—";
@@ -189,7 +182,7 @@
 
         function batchNameFor(student) {
             const batch = state.batches.find((item) => item.id === student.batchId);
-            return batch ? batch.batchName : "Batch unavailable";
+            return batch ? batch.batchName : `Batch ID ${student.batchId} (name unavailable)`;
         }
 
         function studentMatchesFilters(student) {
@@ -224,9 +217,6 @@
                         return right.totalFees - left.totalFees || compareName(left, right);
                     case "balance-desc":
                         return outstandingFor(right) - outstandingFor(left)
-                            || compareName(left, right);
-                    case "registration-desc":
-                        return String(right.registrationDate || "").localeCompare(String(left.registrationDate || ""))
                             || compareName(left, right);
                     default:
                         return compareName(left, right);
@@ -325,15 +315,10 @@
             setSelectOptions(formBatch, state.batches, false, student ? student.batchId : "");
             form.elements.studentName.value = student ? student.studentName : "";
             form.elements.contactNo.value = student ? student.contactNo : "";
-            form.elements.email.value = student ? student.email || "" : "";
-            form.elements.address.value = student ? student.address || "" : "";
             form.elements.totalFees.value = student ? student.totalFees : "";
             form.elements.emi1.value = student ? student.emi1 || "" : "";
             form.elements.emi2.value = student ? student.emi2 || "" : "";
             form.elements.emi3.value = student ? student.emi3 || "" : "";
-            form.elements.registrationDate.value = student
-                ? student.registrationDate
-                : todayLocal();
             document.querySelector("[data-form-title]").textContent = student ? "Edit Student" : "Add Student";
             const saveIcon = createElement("i", "bi bi-check2");
             saveIcon.setAttribute("aria-hidden", "true");
@@ -359,9 +344,6 @@
             if (!/^(?:07\d{8}|7\d{8}|\+947\d{8})$/.test(compactContact)) {
                 throw new TypeError("Enter a valid Sri Lankan mobile number, such as 0771234567 or +94771234567.");
             }
-            if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) {
-                throw new TypeError("Enter a valid email address or leave the field blank.");
-            }
             if (!Number.isFinite(Number(data.totalFees)) || Number(data.totalFees) <= 0) {
                 throw new TypeError("Total course fee must be greater than zero.");
             }
@@ -373,14 +355,11 @@
             return {
                 studentName: data.studentName.trim(),
                 contactNo: data.contactNo.trim(),
-                email: data.email.trim(),
-                address: data.address.trim(),
                 batchId: data.batchId,
                 totalFees: Number(data.totalFees),
                 emi1: data.emi1 === "" ? 0 : Number(data.emi1),
                 emi2: data.emi2 === "" ? 0 : Number(data.emi2),
                 emi3: data.emi3 === "" ? 0 : Number(data.emi3),
-                registrationDate: data.registrationDate
             };
         }
 
@@ -393,7 +372,7 @@
             });
         }
 
-        function saveStudent(event) {
+        async function saveStudent(event) {
             event.preventDefault();
             if (state.isSaving) {
                 return;
@@ -418,8 +397,8 @@
             saveButton.disabled = true;
             try {
                 const saved = state.editingId
-                    ? storage.updateStudent(state.editingId, data)
-                    : storage.addStudent(data);
+                    ? await storage.updateStudent(state.editingId, data)
+                    : await storage.addStudent(data);
                 if (!saved) {
                     throw new Error("The student record could not be saved because it no longer exists.");
                 }
@@ -435,7 +414,7 @@
             }
         }
 
-        function handleRowAction(event) {
+        async function handleRowAction(event) {
             const button = event.target.closest("[data-student-action]");
             if (!button) {
                 return;
@@ -452,7 +431,7 @@
                         break;
                     case "delete":
                         if (window.confirm(`Move ${student.studentName} to deleted students? Their payment history will be preserved.`)) {
-                            if (!storage.softDeleteStudent(student.id)) {
+                            if (!await storage.softDeleteStudent(student.id)) {
                                 throw new Error("The student record no longer exists.");
                             }
                             render();
@@ -460,7 +439,7 @@
                         }
                         break;
                     case "restore":
-                        if (!storage.restoreStudent(student.id)) {
+                        if (!await storage.restoreStudent(student.id)) {
                             throw new Error("The student record could not be restored because it no longer exists.");
                         }
                         render();
@@ -485,7 +464,7 @@
         });
         rows.addEventListener("click", handleRowAction);
         form.addEventListener("submit", saveStudent);
-        page.querySelectorAll("[data-close-student-form]").forEach((button) => button.addEventListener("click", closeForm));
+        document.querySelectorAll("[data-close-student-form]").forEach((button) => button.addEventListener("click", closeForm));
         dialog.addEventListener("click", (event) => {
             if (event.target === dialog) {
                 closeForm();
@@ -503,9 +482,14 @@
                     showNotice(notice, "That active student could not be found for editing.", "error");
                 }
             }
+            const missingBatchCount = state.students.filter((student) => !student.isSoftDelete
+                && !state.batches.some((batch) => batch.id === student.batchId)).length;
+            if (missingBatchCount > 0) {
+                showNotice(notice, `${missingBatchCount} active student records reference batch IDs missing from the API batch list. Rows show the ID where the batch name is unavailable.`);
+            }
         } catch (error) {
             console.error("Unable to load the student directory.", error);
-            showNotice(notice, error.message || "Unable to load student records from LocalStorage.", "error");
+            showNotice(notice, error.message || "Unable to load student records from the API.", "error");
         }
     }
 
@@ -547,11 +531,7 @@
             setText(page, "[data-detail-id]", `Student ID: ${student.id}`);
             setText(page, "[data-detail-initials]", initials);
             setText(page, "[data-detail-contact]", student.contactNo);
-            setText(page, "[data-detail-email]", student.email || "Not provided");
-            setText(page, "[data-detail-address]", student.address || "Not provided");
-            setText(page, "[data-detail-registration]", formatDate(student.registrationDate));
-            setText(page, "[data-detail-batch]", batch ? batch.batchName : "Batch unavailable");
-            setText(page, "[data-detail-course]", batch ? batch.courseName : "—");
+            setText(page, "[data-detail-batch]", batch ? batch.batchName : `Batch ID ${student.batchId} (name unavailable)`);
             setText(page, "[data-detail-total-fees]", formatCurrency(student.totalFees));
             setText(page, "[data-detail-received]", formatCurrency(student.totalReceived));
             setText(page, "[data-detail-outstanding]", formatCurrency(outstanding));
@@ -589,7 +569,7 @@
             setText(page, "[data-payment-count]", String(payments.length));
         }
 
-        deleteButton.addEventListener("click", () => {
+        deleteButton.addEventListener("click", async () => {
             try {
                 const student = storage.getStudentById(studentId);
                 if (!student) {
@@ -598,7 +578,7 @@
                 if (!window.confirm(`Move ${student.studentName} to deleted students? Their payment history will be preserved.`)) {
                     return;
                 }
-                if (!storage.softDeleteStudent(studentId)) {
+                if (!await storage.softDeleteStudent(studentId)) {
                     throw new Error("The student record could not be deleted because it no longer exists.");
                 }
                 render();
@@ -607,9 +587,9 @@
                 showNotice(notice, error.message || "Unable to delete this student.", "error");
             }
         });
-        restoreButton.addEventListener("click", () => {
+        restoreButton.addEventListener("click", async () => {
             try {
-                if (!storage.restoreStudent(studentId)) {
+                if (!await storage.restoreStudent(studentId)) {
                     throw new Error("The student record could not be restored because it no longer exists.");
                 }
                 render();
@@ -626,15 +606,25 @@
             content.hidden = true;
             emptyState.hidden = false;
             emptyState.querySelector("h2").textContent = "Unable to load student";
-            emptyState.querySelector("p").textContent = error.message || "Student details could not be loaded from LocalStorage.";
+            emptyState.querySelector("p").textContent = error.message || "Student details could not be loaded from the API.";
             showNotice(notice, error.message || "Unable to load student details.", "error");
         }
     }
 
-    function start() {
+    async function start() {
         initializeSidebar();
         const directory = document.querySelector("[data-students-page]");
         const details = document.querySelector("[data-student-details-page]");
+        [directory, details].filter(Boolean).forEach((page) => {
+            showNotice(page.querySelector("[data-student-notice]"), "Loading student and batch records from the API…");
+        });
+        try {
+            await storage.initialize();
+        } catch (error) {
+            document.querySelectorAll("[data-student-notice]").forEach((notice) => showNotice(notice, error.message, "error"));
+            return;
+        }
+        document.querySelectorAll("[data-student-notice]").forEach((notice) => { notice.hidden = true; });
         if (directory) {
             initializeStudentDirectory(directory);
         }

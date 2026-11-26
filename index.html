@@ -62,9 +62,6 @@
                         <span class="profile-name">Amaya Kumari</span>
                         <span class="profile-role">Administrator</span>
                     </div>
-                    <button class="icon-button profile-menu-button" type="button" aria-label="Profile menu placeholder">
-                        <i class="bi bi-three-dots" aria-hidden="true"></i>
-                    </button>
                 </div>
             </div>
         </aside>
@@ -84,10 +81,6 @@
                         <input type="search" placeholder="Search students, payments, or batches" aria-label="Search students, payments, or batches" data-dashboard-search>
                         <span class="search-shortcut" aria-hidden="true">⌘ K</span>
                     </label>
-                    <button class="icon-button notification-button" type="button" aria-label="Notifications placeholder">
-                        <i class="bi bi-bell" aria-hidden="true"></i>
-                        <span class="notification-dot" aria-hidden="true"></span>
-                    </button>
                     <div class="topbar-divider" aria-hidden="true"></div>
                     <div class="topbar-user">
                         <div class="avatar avatar-header" aria-hidden="true">AK</div>
@@ -95,7 +88,6 @@
                             <span class="profile-name">Amaya Kumari</span>
                             <span class="profile-role">Administrator</span>
                         </div>
-                        <i class="bi bi-chevron-down user-chevron" aria-hidden="true"></i>
                     </div>
                 </div>
             </header>
@@ -162,7 +154,7 @@
                         </div>
                         <div class="chart-summary">
                         <div class="chart-total" data-dashboard-year-total>Rs. 0.00</div>
-                        <span class="chart-total-caption" data-dashboard-year-caption>Collected this year</span>
+                        <span class="chart-total-caption" data-dashboard-year-caption>Receipts saved in this browser</span>
                         </div>
                         <div class="collection-chart-wrap">
                             <canvas id="collection-chart" role="img" aria-label="Monthly fee collection bar chart for January to December"></canvas>
@@ -175,7 +167,6 @@
                                 <h3>Payment Status</h3>
                                 <p>Student fee payment breakdown</p>
                             </div>
-                            <button class="more-button icon-button" type="button" aria-label="Payment status options placeholder"><i class="bi bi-three-dots" aria-hidden="true"></i></button>
                         </div>
                         <div class="status-chart-wrap">
                             <canvas id="status-chart" role="img" aria-label="Payment status doughnut chart"></canvas>
@@ -239,7 +230,7 @@
                                 <h3>Batch Overview</h3>
                                 <p>Students by class group</p>
                             </div>
-                            <a class="text-link" href="pages/batches.html" aria-label="View all batches placeholder">See all</a>
+                            <a class="text-link" href="pages/batches.html">See all</a>
                         </div>
                         <div class="batch-chart-wrap">
                             <canvas id="batch-chart" role="img" aria-label="Student distribution across five batches"></canvas>
@@ -258,8 +249,8 @@
                     <article class="panel registrations-panel">
                         <div class="panel-heading">
                             <div>
-                                <h3>Recent Registrations</h3>
-                                <p>New students who joined recently</p>
+                                <h3>Students by Batch</h3>
+                                <p>Student records loaded from the API</p>
                             </div>
                             <a class="text-link" href="pages/students.html">View students</a>
                         </div>
@@ -310,7 +301,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <script src="assets/js/storage.js"></script>
-    <script src="assets/js/sample-data.js" data-auto-seed></script>
     <script src="assets/js/dashboard.js"></script>
 </body>
 </html>

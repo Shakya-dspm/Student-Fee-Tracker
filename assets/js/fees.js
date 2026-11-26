@@ -25,11 +25,17 @@
         return node;
     }
 
-    function start() {
+    async function start() {
         initializeSidebar();
         const page = document.querySelector("[data-fees-page]");
         if (!page) return;
         const notice = page.querySelector("[data-fees-notice]");
+        try {
+            await storage.initialize();
+        } catch (error) {
+            showError(error);
+            return;
+        }
         const setup = page.querySelector("[data-fees-setup]");
         const rows = page.querySelector("[data-fees-rows]");
         const search = page.querySelector("[data-fees-search]");
@@ -96,7 +102,7 @@
                         action.textContent = "—";
                     }
                     tr.append(studentCell,
-                        el("td", "", batch ? batch.batchName : "Batch unavailable"),
+                        el("td", "", batch ? batch.batchName : `Batch ID ${student.batchId} (name unavailable)`),
                         el("td", "text-end", formatCurrency(student.totalFees)),
                         el("td", "text-end", formatCurrency(student.totalReceived)),
                         el("td", "text-end payment-amount", formatCurrency(outstanding)),
