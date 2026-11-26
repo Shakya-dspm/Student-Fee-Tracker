@@ -178,7 +178,7 @@
 
       const batch = state.batches.find((item) => item.id === student.batchId);
 
-      return batch ? batch.batchName : `Batch ID ${student.batchId} (name unavailable)`;
+      return batch ? batch.batchName : `Batch ID ${student.batchId} (not in API batch list)`;
     }
 
     function getOutstanding(student) {

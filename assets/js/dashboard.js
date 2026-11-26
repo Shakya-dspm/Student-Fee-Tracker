@@ -225,7 +225,7 @@
             }
             row.append(nameCell,
                 createElement("td", "student-id-cell", student ? student.id : payment.studentId),
-                createElement("td", "", batch ? batch.batchName : `Batch ID ${student ? student.batchId : "unknown"} (name unavailable)`),
+                createElement("td", "", batch ? batch.batchName : `Batch ID ${student ? student.batchId : "unknown"} (not in API batch list)`),
                 createElement("td", "", new Date(`${payment.paymentDate}T00:00:00`).toLocaleDateString("en-LK")),
                 createElement("td", "amount-cell", formatCurrency(payment.amount)),
                 createElement("td", "", payment.paymentMethod),
@@ -252,7 +252,7 @@
             const copy = createElement("div", "registration-copy");
             copy.append(createElement("strong", "", student.studentName));
             const batch = batchesById.get(student.batchId);
-            copy.append(createElement("small", "", batch ? batch.batchName : `Batch ID ${student.batchId} (name unavailable)`));
+            copy.append(createElement("small", "", batch ? batch.batchName : `Batch ID ${student.batchId} (not in API batch list)`));
             const arrow = createElement("i", "bi bi-arrow-up-right registration-arrow");
             arrow.setAttribute("aria-hidden", "true");
             item.append(avatar, copy, arrow);
