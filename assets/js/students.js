@@ -106,13 +106,11 @@
 
     function canonicalPhone(value) {
         const compact = String(value || "").trim().replace(/[\s().-]/g, "");
-        if (compact.startsWith("+94")) {
-            return compact;
-        }
-        if (compact.startsWith("0")) {
-            return `+94${compact.slice(1)}`;
-        }
-        return compact.startsWith("7") ? `+94${compact}` : compact;
+        const digits = compact.replace(/^\+/, "");
+        if (/^(?:0094|94)7\d{8}$/.test(digits)) return `+${digits.replace(/^0094/, "94")}`;
+        if (/^07\d{8}$/.test(digits)) return `+94${digits.slice(1)}`;
+        if (/^7\d{8}$/.test(digits)) return `+94${digits}`;
+        return compact;
     }
 
     function normalizeName(value) {
@@ -163,9 +161,14 @@
                 option.value = batch.id;
                 options.push(option);
             });
+            if (!includeAll && selectedValue && !batches.some((batch) => batch.id === String(selectedValue))) {
+                const unavailable = createElement("option", "", `Batch ID ${selectedValue} (not in API batch list)`);
+                unavailable.value = String(selectedValue);
+                options.push(unavailable);
+            }
             select.replaceChildren(...options);
             select.value = selectedValue || "";
-            select.disabled = !includeAll && batches.length === 0;
+            select.disabled = !includeAll && batches.length === 0 && !selectedValue;
         }
 
         function renderSummary() {
@@ -182,7 +185,7 @@
 
         function batchNameFor(student) {
             const batch = state.batches.find((item) => item.id === student.batchId);
-            return batch ? batch.batchName : `Batch ID ${student.batchId} (name unavailable)`;
+            return batch ? batch.batchName : `Batch ID ${student.batchId} (not in API batch list)`;
         }
 
         function studentMatchesFilters(student) {
@@ -305,7 +308,7 @@
         }
 
         function openForm(student) {
-            if (!state.batches.length) {
+            if (!state.batches.length && !student) {
                 showNotice(notice, "Add a batch before registering a student. The batch list is currently empty.", "error");
                 return;
             }
@@ -341,8 +344,8 @@
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             const compactContact = data.contactNo.trim().replace(/[\s().-]/g, "");
-            if (!/^(?:07\d{8}|7\d{8}|\+947\d{8})$/.test(compactContact)) {
-                throw new TypeError("Enter a valid Sri Lankan mobile number, such as 0771234567 or +94771234567.");
+            if (!/^\+?\d{7,15}$/.test(compactContact)) {
+                throw new TypeError("Enter a phone number with 7 to 15 digits. You may include a country code.");
             }
             if (!Number.isFinite(Number(data.totalFees)) || Number(data.totalFees) <= 0) {
                 throw new TypeError("Total course fee must be greater than zero.");
@@ -531,7 +534,7 @@
             setText(page, "[data-detail-id]", `Student ID: ${student.id}`);
             setText(page, "[data-detail-initials]", initials);
             setText(page, "[data-detail-contact]", student.contactNo);
-            setText(page, "[data-detail-batch]", batch ? batch.batchName : `Batch ID ${student.batchId} (name unavailable)`);
+            setText(page, "[data-detail-batch]", batch ? batch.batchName : `Batch ID ${student.batchId} (not in API batch list)`);
             setText(page, "[data-detail-total-fees]", formatCurrency(student.totalFees));
             setText(page, "[data-detail-received]", formatCurrency(student.totalReceived));
             setText(page, "[data-detail-outstanding]", formatCurrency(outstanding));

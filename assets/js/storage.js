@@ -64,7 +64,7 @@
         return {
             id: String(record.enrollmentId),
             studentName: record.studentName || "",
-            contactNo: record.contactNo || "",
+            contactNo: displayPhone(record.contactNo),
             totalFees,
             emi1: Number(record.emi1 || 0),
             emi2: Number(record.emi2 || 0),
@@ -122,10 +122,17 @@
 
     function normalizePhone(value) {
         const compact = String(value || "").trim().replace(/[\s().-]/g, "");
-        if (/^\+947\d{8}$/.test(compact)) return `0${compact.slice(3)}`;
-        if (/^7\d{8}$/.test(compact)) return `0${compact}`;
-        if (/^07\d{8}$/.test(compact)) return compact;
-        throw new TypeError("Contact number must be a Sri Lankan mobile number.");
+        const national = compact.replace(/^\+94/, "94").replace(/^0094/, "94");
+        if (/^947\d{8}$/.test(national)) return `0${national.slice(2)}`;
+        if (/^7\d{8}$/.test(national)) return `0${national}`;
+        if (/^07\d{8}$/.test(national)) return national;
+        if (/^\+?\d{7,15}$/.test(compact)) return compact;
+        throw new TypeError("Contact number must contain between 7 and 15 digits, with an optional country code.");
+    }
+
+    function displayPhone(value) {
+        try { return normalizePhone(value); }
+        catch (_) { return value === undefined || value === null ? "" : String(value); }
     }
 
     function paymentStatus(received, fees) {

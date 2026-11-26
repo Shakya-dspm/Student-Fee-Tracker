@@ -102,7 +102,7 @@
                         action.textContent = "—";
                     }
                     tr.append(studentCell,
-                        el("td", "", batch ? batch.batchName : `Batch ID ${student.batchId} (name unavailable)`),
+                        el("td", "", batch ? batch.batchName : `Batch ID ${student.batchId} (not in API batch list)`),
                         el("td", "text-end", formatCurrency(student.totalFees)),
                         el("td", "text-end", formatCurrency(student.totalReceived)),
                         el("td", "text-end payment-amount", formatCurrency(outstanding)),
