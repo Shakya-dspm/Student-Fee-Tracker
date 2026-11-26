@@ -1,8 +1,11 @@
 (function initializeFeeTrackStorage(root) {
     "use strict";
 
-    // The local server proxies this path to avoid the API provider's missing browser CORS headers.
-    const API_BASE_URL = "";
+    // Use the local proxy during development; static deployments call the API directly.
+    const hostname = root.location?.hostname;
+    const API_BASE_URL = hostname === "localhost" || hostname === "127.0.0.1"
+        ? ""
+        : "https://api.freeprojectapi.com";
     const PAYMENT_KEY = "feetTrack_payments";
     const PAYMENT_METHODS = Object.freeze(["Cash", "Bank Transfer", "Card", "Other"]);
     let students = [];

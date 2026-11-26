@@ -17,10 +17,11 @@ function createResponse(data, status = 200) {
     };
 }
 
-function createHarness({ students = [], batches = [], failPath = "", emptyGetAll = false } = {}) {
+function createHarness({ students = [], batches = [], failPath = "", emptyGetAll = false, hostname = "localhost" } = {}) {
     const values = new Map();
     const calls = [];
     const window = {
+        location: { hostname },
         localStorage: {
             getItem(key) { return values.has(key) ? values.get(key) : null; },
             setItem(key, value) { values.set(key, String(value)); }
@@ -30,7 +31,7 @@ function createHarness({ students = [], batches = [], failPath = "", emptyGetAll
         const parsed = new URL(url, "http://feetrack.test");
         const method = (options.method || "GET").toUpperCase();
         const body = options.body ? JSON.parse(options.body) : null;
-        calls.push({ method, path: parsed.pathname, search: parsed.search, body });
+        calls.push({ method, origin: parsed.origin, path: parsed.pathname, search: parsed.search, body });
         if (parsed.pathname === failPath) return createResponse({ message: "Mock API failure" }, 400);
         if (parsed.pathname.endsWith("/getAllEnrollments")) return createResponse(emptyGetAll ? [] : students);
         if (parsed.pathname.endsWith("/FilterEnrollments")) return createResponse(students);
@@ -69,6 +70,14 @@ test("initialization loads API enrollment and batch records", async () => {
         "/api/FeesTracking/batches",
         "/api/FeesTracking/getAllEnrollments"
     ]);
+});
+
+test("static deployments use the provider origin instead of the GitHub Pages origin", async () => {
+    const { storage, calls } = createHarness({ hostname: "student.github.io" });
+
+    await storage.initialize();
+
+    assert.ok(calls.every((call) => call.origin === "https://api.freeprojectapi.com"));
 });
 
 test("initialization falls back to FilterEnrollments when getAllEnrollments is empty", async () => {

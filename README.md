@@ -1,6 +1,6 @@
 # Student Fee Tracker
 
-Student Fee Tracker is a vanilla JavaScript and Bootstrap frontend connected to the FreeProjectAPI Fees Tracking service through a small same-origin Node.js proxy.
+Student Fee Tracker is a vanilla JavaScript and Bootstrap frontend connected to the FreeProjectAPI Fees Tracking service. It uses the local Node.js proxy during development and calls the provider directly when hosted as a static site such as GitHub Pages.
 
 ## API connection
 
@@ -9,7 +9,7 @@ Student Fee Tracker is a vanilla JavaScript and Bootstrap frontend connected to 
 - Batch records use `/api/FeesTracking/batches` and `/api/FeesTracking/batches/{id}`.
 - The API contract is published in the provider's [Fees Tracking API documentation](https://freeprojectapi.com/apis/fees-tracking/) and live [OpenAPI document](https://api.freeprojectapi.com/swagger/v1/swagger.json).
 
-The app loads current enrollments and batches when a page opens. Student and batch creates, edits, deletes, restores, and fee payment totals are sent to the API. The provider does not send browser CORS headers, so serve the app with the included proxy instead of Python's static server. Start it with Node.js:
+The app loads current enrollments and batches when a page opens. Student and batch creates, edits, deletes, restores, and fee payment totals are sent to the API. For local development, start the included proxy with Node.js:
 
 ```sh
 node server.js
@@ -23,7 +23,7 @@ The API stores a student's name, contact number, batch, total fee, three install
 
 The service has no payment transaction endpoint. The total received is updated on the API, while payment receipts (date, amount, method, and note) are kept in the current browser's `localStorage`. Receipt history is therefore browser-specific and is not shared between browsers. Existing API totals cannot be reconstructed into individual receipt history.
 
-When deploying, configure the web host or backend to proxy `/api/FeesTracking/*` to `https://api.freeprojectapi.com/api/FeesTracking/*` on the server. The browser client uses the same-origin `/api/FeesTracking/*` path.
+On GitHub Pages and other non-local hosts, the browser client uses `https://api.freeprojectapi.com` directly. The provider currently responds to browser CORS requests. The local Node.js proxy remains available for development and deployments where a server-side proxy is preferred.
 
 ## Shared practice service
 
