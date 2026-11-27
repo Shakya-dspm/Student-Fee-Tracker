@@ -120,6 +120,7 @@
                             }
                             return `${(amount / 1000).toLocaleString("en-LK", { maximumFractionDigits: 1 })}k`;
                         } }
+                    }
                 }
             }
         });
