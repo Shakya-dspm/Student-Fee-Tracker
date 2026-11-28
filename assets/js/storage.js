@@ -88,23 +88,27 @@
         }
     }
 
+    async function fetchEnrollments() {
+        let records = asArray(await request("/api/FeesTracking/getAllEnrollments"));
+        // The provider currently returns [] from getAllEnrollments even though records exist.
+        // FilterEnrollments with no criteria is a read-only fallback that returns the full set.
+        if (records.length === 0) {
+            records = asArray(await request("/api/FeesTracking/FilterEnrollments", {
+                method: "POST",
+                body: JSON.stringify({})
+            }));
+        }
+        return records.map(mapStudent);
+    }
+
     async function initialize() {
         if (initialized) return;
         if (!initializePromise) {
             initializePromise = Promise.all([
-                request("/api/FeesTracking/getAllEnrollments"),
+                fetchEnrollments(),
                 request("/api/FeesTracking/batches")
-            ]).then(async ([enrollmentResult, batchResult]) => {
-                let enrollmentRecords = asArray(enrollmentResult);
-                // The provider currently returns [] from getAllEnrollments even though records exist.
-                // FilterEnrollments with no criteria is a read-only fallback that returns the full set.
-                if (enrollmentRecords.length === 0) {
-                    enrollmentRecords = asArray(await request("/api/FeesTracking/FilterEnrollments", {
-                        method: "POST",
-                        body: JSON.stringify({})
-                    }));
-                }
-                students = enrollmentRecords.map(mapStudent);
+            ]).then(([enrollmentRecords, batchResult]) => {
+                students = enrollmentRecords;
                 batches = asArray(batchResult).map(mapBatch);
                 payments = readPaymentLedger();
                 initialized = true;
@@ -174,9 +178,23 @@
         requireInitialized();
         const body = enrollmentBody(input);
         const created = unwrapRecord(await request("/api/FeesTracking/addNewEnrollment", { method: "POST", body: JSON.stringify(body) }));
-        const student = mapStudent(created || body);
-        if (!student.id || student.id === "undefined") throw new Error("The API did not return an enrollment ID. Reload the student list before retrying.");
-        students.push(student);
+        let refreshedStudents;
+        try {
+            refreshedStudents = await fetchEnrollments();
+        } catch (error) {
+            throw new Error(`The student was submitted to the API, but the directory could not be refreshed. Reload before trying again. ${error.message}`);
+        }
+        const createdId = created && (created.enrollmentId ?? created.id);
+        const student = createdId !== undefined
+            ? refreshedStudents.find((item) => item.id === String(createdId))
+            : [...refreshedStudents].reverse().find((item) => item.studentName === body.studentName
+                && item.contactNo === displayPhone(body.contactNo)
+                && item.batchId === String(body.batchId)
+                && item.totalFees === body.totalFees);
+        students = refreshedStudents;
+        if (!student) {
+            throw new Error("The API did not return the new student in its enrollment list. Reload the directory before retrying.");
+        }
         return { ...student };
     }
 
